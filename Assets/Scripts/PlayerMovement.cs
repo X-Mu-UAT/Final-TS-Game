@@ -1,65 +1,25 @@
 using UnityEngine;
-// 1. Add this namespace at the very top
-using UnityEngine.InputSystem;
-
-public class PlayerMovement : MonoBehaviour
+[RequireComponent(typeof(Rigidbody2D))]
+public class PlayerController2D : MonoBehaviour
 {
-    [SerializeField] private float speed;
-    private Rigidbody2D body;
-    private Animator anim;
-    private bool grounded;
-
-    private void Awake()
+    [Header("Movement Settings")][SerializeField] private float moveSpeed = 8f; [SerializeField] private float jumpForce = 12f; [Header("Ground Check Settings")]
+    [SerializeField] private Transform groundCheckPoint;
+    [SerializeField] private Vector2 groundCheckSize = new Vector2(0.5f, 0.1f);
+    [SerializeField] private LayerMask groundLayer; private Rigidbody2D rb;
+    private float horizontalInput;
+    private bool isGrounded;
+    private bool jumpRequested; private void Start()
     {
-        //Grabs references for rigidbody and animator from game object. 
-        body = GetComponent<Rigidbody2D>();
-        anim = GetComponent<Animator>();
+        // Cache the Rigidbody2D component attached to this GameObject
+        rb = GetComponent<Rigidbody2D>();
     }
-
     private void Update()
     {
-        // 2. Setup temporary variables for your inputs
-        float horizontalInput = 0f;
-        bool jumpPressed = false;
-
-        // 3. Read input from the new Input System
-        if (Keyboard.current != null)
+        // 1. Gather horizontal movement input (A/D or Left/Right arrows)
+        horizontalInput = Input.GetAxisRaw("Horizontal");// 2. Detect jump input (Spacebar by default)
+        if (Input.GetButtonDown("Jump") && isGrounded)
         {
-            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) horizontalInput = -1f;
-            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) horizontalInput = 1f;
-
-            jumpPressed = Keyboard.current.spaceKey.isPressed;
+            jumpRequested = true;
         }
-
-        // 4. Your physics logic using linearVelocity remains perfectly intact
-        body.linearVelocity = new Vector2(horizontalInput * speed, body.linearVelocity.y);
-
-        //Flip player when facing left/right. 
-        if (horizontalInput > 0.01f)
-            transform.localScale = Vector3.one;
-        else if (horizontalInput < -0.01f)
-            transform.localScale = new Vector3(-1, 1, 1);
-
-        // 5. Use the new jump boolean here
-        if (jumpPressed && grounded)
-            Jump();
-
-        //sets animation parameters 
-        anim.SetBool("run", horizontalInput != 0);
-        anim.SetBool("grounded", grounded);
-    }
-
-    private void Jump()
-    {
-        body.linearVelocity = new Vector2(body.linearVelocity.x, speed);
-        anim.SetTrigger("jump");
-        grounded = false;
-    }
-
-    private void OnCollisionEnter2D(Collision2D collision)
-    {
-        // Performance optimization: CompareTag is better than .tag ==
-        if (collision.gameObject.CompareTag("Ground"))
-            grounded = true;
     }
 }
