@@ -26,13 +26,16 @@ public class PlayerController2D : MonoBehaviour
 
     private void Update()
     {
-        // 1. Gather horizontal movement input using the Keyboard API
+        // 1. Gather horizontal movement input using the Keyboard API cleanly
         horizontalInput = 0f;
         if (Keyboard.current != null)
         {
-            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed) horizontalInput = -1f;
-            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed) horizontalInput = 1f;
+            if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed)
+                horizontalInput -= 1f;
+            if (Keyboard.current.dKey.isPressed || Keyboard.current.rightArrowKey.isPressed)
+                horizontalInput += 1f;
         }
+
 
         // 2. Detect jump input using the Space key
         if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame && isGrounded)
@@ -68,5 +71,11 @@ public class PlayerController2D : MonoBehaviour
             Gizmos.color = Color.green;
             Gizmos.DrawWireCube(groundCheckPoint.position, groundCheckSize);
         }
+    }
+
+    // Call this from external scripts to manually set the grounded state
+    public void SetGrounded(bool groundedState)
+    {
+        isGrounded = groundedState;
     }
 }
