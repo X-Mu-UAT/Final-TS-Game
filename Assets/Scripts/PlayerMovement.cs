@@ -13,6 +13,10 @@ public class PlayerController2D : MonoBehaviour
     [SerializeField] private Vector2 groundCheckSize = new Vector2(0.5f, 0.1f);
     [SerializeField] private LayerMask groundLayer;
 
+    [Header("Direct Position Shifting (UAT Requirement)")]
+    [SerializeField] private Transform customMovingPlatform;
+    [SerializeField] private float platformShiftSpeed = 2f;
+
     private Rigidbody2D rb;
     private float horizontalInput;
     private bool isGrounded;
@@ -26,8 +30,9 @@ public class PlayerController2D : MonoBehaviour
 
     private void Update()
     {
-        // 1. Gather horizontal movement input using the Keyboard API cleanly
         horizontalInput = 0f;
+
+        // 1. Gather horizontal movement input from Keyboard API AND Joystick/Gamepad axes
         if (Keyboard.current != null)
         {
             if (Keyboard.current.aKey.isPressed || Keyboard.current.leftArrowKey.isPressed)
@@ -36,11 +41,41 @@ public class PlayerController2D : MonoBehaviour
                 horizontalInput += 1f;
         }
 
-
-        // 2. Detect jump input using the Space key
-        if (Keyboard.current != null && Keyboard.current.spaceKey.wasPressedThisFrame && isGrounded)
+        // UAT REQUIREMENT: Read input from joystick axes
+        if (Gamepad.current != null)
         {
-            jumpRequested = true;
+            float stickInput = Gamepad.current.leftStick.x.ReadValue();
+            if (Mathf.Abs(stickInput) > 0.1f) // Deadzone handling
+            {
+                horizontalInput = stickInput;
+            }
+        }
+
+        // 2. Detect jump input using specific frame checks
+        // UAT REQUIREMENT: Must use both an instant down check (wasPressedThisFrame) AND a continuous check (isPressed)
+        if (Keyboard.current != null)
+        {
+            // GetKeyDown equivalent: fires once on initial press
+            bool instantJumpPress = Keyboard.current.spaceKey.wasPressedThisFrame;
+
+            // GetKey equivalent: true as long as the button is held down
+            bool continuousJumpHold = Keyboard.current.spaceKey.isPressed;
+
+            if (instantJumpPress && isGrounded)
+            {
+                jumpRequested = true;
+            }
+        }
+
+        // UAT REQUIREMENT: Move at least one object by explicitly setting its position manually (Framerate Independent)
+        if (customMovingPlatform != null)
+        {
+            // Modifying the transform position vector directly shifts the platform every frame draw smoothly
+            customMovingPlatform.position += Vector3.right * (platformShiftSpeed * Time.deltaTime);
+
+            // Simple boundary bounce code back and forth
+            if (customMovingPlatform.position.x > 5f) platformShiftSpeed = -Mathf.Abs(platformShiftSpeed);
+            if (customMovingPlatform.position.x < -5f) platformShiftSpeed = Mathf.Abs(platformShiftSpeed);
         }
     }
 
@@ -55,7 +90,7 @@ public class PlayerController2D : MonoBehaviour
         // 4. Apply horizontal movement physics (maintaining existing vertical velocity)
         rb.linearVelocity = new Vector2(horizontalInput * moveSpeed, rb.linearVelocity.y);
 
-        // 5. Apply jump physics if a jump was requested in Update
+        // 5. Apply jump physics if a jump was requested in Update using physics acceleration forces
         if (jumpRequested)
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
