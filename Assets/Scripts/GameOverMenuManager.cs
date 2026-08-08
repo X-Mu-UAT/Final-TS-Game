@@ -34,7 +34,7 @@ public class GameOverMenuManager : MonoBehaviour
         PlayFeedbackSound();
 
         // Reload the initial level scene configuration directly 
-        SceneManager.LoadScene("Level1");
+        SceneManager.LoadScene("Level 1-2");
     }
 
     private void RouteBackToMainMenu()

@@ -1,20 +1,35 @@
 using System;
+using System.Collections.Generic;
 
-/// <summary>
-/// Data container for session persistence using JSON Serialization.
-/// </summary>
+[Serializable]
+public class HighscoreEntry
+{
+    public string playerName;
+    public int scoreValue;
+
+    public HighscoreEntry(string name, int score)
+    {
+        playerName = name;
+        scoreValue = score;
+    }
+}
+
 [Serializable]
 public class GameData
 {
-    public int score;
+    // Tracks a collection of historical score entries
+    public List<HighscoreEntry> scoresHistoryList = new List<HighscoreEntry>();
     public float musicVolume;
     public float sfxVolume;
 
-    // Sets default initialization variables if configuration file does not exist.
     public GameData()
     {
-        score = 0;
         musicVolume = 0.75f;
         sfxVolume = 0.75f;
+
+        // Populate with structural default entries for the leaderboard placeholder display
+        scoresHistoryList.Add(new HighscoreEntry("🐸 Froggy", 1200));
+        scoresHistoryList.Add(new HighscoreEntry("🪰 LilyPad", 800));
+        scoresHistoryList.Add(new HighscoreEntry("🪨 Tadpole", 300));
     }
 }

@@ -1,22 +1,19 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System.Collections.Generic;
 
 /// <summary>
 /// Core structural system managing game states, score metrics, and persistence pipelines.
 /// </summary>
 public class GameManager : MonoBehaviour
 {
-    // Singleton Instance
+    // Singleton Instance property
     public static GameManager Instance { get; private set; }
 
-    [Header("Session Progress Storage")]
+    [Header("Session Tracking")]
     [SerializeField] private int currentScore = 0;
 
-    // Abstract collection tracking loaded game levels dynamically via string indices
-    private Dictionary<string, int> sceneBuildIndexes = new Dictionary<string, int>();
-    private List<string> activeGameModifiers = new List<string>();
-
+    // Persistent profile data container
     public GameData SessionData { get; private set; }
 
     private void Awake()
@@ -27,35 +24,52 @@ public class GameManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
+
         Instance = this;
-        DontDestroyOnLoad(gameObject);
+        DontDestroyOnLoad(gameObject); // Persists across level switches
 
         LoadProfileData();
-        PopulateSceneDictionary();
-    }
-
-    private void PopulateSceneDictionary()
-    {
-        // Demonstrating a for loop implementation to track operational scenes
-        for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
-        {
-            // Note: Since real names can't always be parsed from closed settings dynamically without editor utilities,
-            // we simulate index records within our runtime structure container mapping keys safely.
-            sceneBuildIndexes.Add("Level_" + i, i);
-        }
     }
 
     public void AddScore(int amount)
     {
         currentScore += amount;
-        if (currentScore > SessionData.score)
-        {
-            SessionData.score = currentScore;
-            SaveProfileData();
-        }
+        Debug.Log($"Score incremented by {amount}. New current score: {currentScore}");
     }
 
     public int GetCurrentScore() => currentScore;
+
+    public int GetHighestCalculatedScore()
+    {
+        // SAFELY LOOKS UP THE TOP SCORE VALUE: Checks index 0 of your scoreboard history list
+        if (SessionData != null && SessionData.scoresHistoryList.Count > 0)
+        {
+            return SessionData.scoresHistoryList[0].scoreValue;
+        }
+        return 0;
+    }
+
+    /// <summary>
+    /// INJECTS NEW SCORE ENTRIES: Adds a named record directly to our persistent profile list.
+    /// </summary>
+    public void RecordAndSaveCurrentScore(string nameToLog)
+    {
+        if (SessionData == null) return;
+
+        // Add the fresh record to the structural collection profile list
+        SessionData.scoresHistoryList.Add(new HighscoreEntry(nameToLog, currentScore));
+
+        // Sort the list from highest score to lowest score using an inline sorting calculation
+        SessionData.scoresHistoryList.Sort((entry1, entry2) => entry2.scoreValue.CompareTo(entry1.scoreValue));
+
+        // Enforce a maximum cutoff limit of the top 5 records to save space
+        if (SessionData.scoresHistoryList.Count > 5)
+        {
+            SessionData.scoresHistoryList.RemoveRange(5, SessionData.scoresHistoryList.Count - 5);
+        }
+
+        SaveProfileData();
+    }
 
     public void LoadProfileData()
     {
@@ -64,7 +78,10 @@ public class GameManager : MonoBehaviour
 
     public void SaveProfileData()
     {
-        SaveSystem.SaveGame(SessionData);
+        if (SessionData != null)
+        {
+            SaveSystem.SaveGame(SessionData);
+        }
     }
 
     public void TriggerGameOver()
