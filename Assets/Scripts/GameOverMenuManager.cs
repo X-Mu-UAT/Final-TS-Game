@@ -9,6 +9,7 @@ public class GameOverMenuManager : MonoBehaviour
 {
     [Header("Interactive Button Routing")]
     [SerializeField] private Button retryGameplayButton;
+    [SerializeField] private Button viewLeaderboardButton; // ADDED: Highscore scene navigation button
     [SerializeField] private Button exitToMainMenuButton;
 
     [Header("Audio Configurations (UAT Requirement)")]
@@ -23,6 +24,11 @@ public class GameOverMenuManager : MonoBehaviour
             retryGameplayButton.onClick.AddListener(TriggerGameplayReset);
         }
 
+        if (viewLeaderboardButton != null)
+        {
+            viewLeaderboardButton.onClick.AddListener(RouteToHighscoreLeaderboard);
+        }
+
         if (exitToMainMenuButton != null)
         {
             exitToMainMenuButton.onClick.AddListener(RouteBackToMainMenu);
@@ -34,7 +40,15 @@ public class GameOverMenuManager : MonoBehaviour
         PlayFeedbackSound();
 
         // Reload the initial level scene configuration directly 
-        SceneManager.LoadScene("Level 1-2");
+        SceneManager.LoadScene("Level1");
+    }
+
+    private void RouteToHighscoreLeaderboard()
+    {
+        PlayFeedbackSound();
+
+        // FIXED: Transition the scene window context over to your Highscore leaderboard view 
+        SceneManager.LoadScene("HighscoreScene");
     }
 
     private void RouteBackToMainMenu()

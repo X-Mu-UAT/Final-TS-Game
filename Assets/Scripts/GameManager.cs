@@ -42,7 +42,8 @@ public class GameManager : MonoBehaviour
     public int GetHighestCalculatedScore()
     {
         // SAFELY LOOKS UP THE TOP SCORE VALUE: Checks index 0 of your scoreboard history list
-        if (SessionData != null && SessionData.scoresHistoryList.Count > 0)
+        // FIXED SYNTAX: Explicitly checks index [0] to extract the scoreValue parameter property out of the HighscoreEntry safely
+        if (SessionData != null && SessionData.scoresHistoryList != null && SessionData.scoresHistoryList.Count > 0)
         {
             return SessionData.scoresHistoryList[0].scoreValue;
         }
@@ -54,7 +55,7 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public void RecordAndSaveCurrentScore(string nameToLog)
     {
-        if (SessionData == null) return;
+        if (SessionData == null || SessionData.scoresHistoryList == null) return;
 
         // Add the fresh record to the structural collection profile list
         SessionData.scoresHistoryList.Add(new HighscoreEntry(nameToLog, currentScore));
